@@ -45,7 +45,7 @@ There are a few things we note here:
 ### Configuration Examples ###
 
 ```rust
-# // Wrap this example within an async main function since the
+# // Wrap this example within an agync main function since the
 # // local_rate_limit filter spawns a task on initialization
 # #[tokio::main]
 # async fn main() {
