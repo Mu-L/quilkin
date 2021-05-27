@@ -18,9 +18,9 @@ Project is currently in *alpha* status, and is being actively developed. Expect 
 
 Not to be used in production systems, yet. We have a few features on roadmap that we want to reach before recommending for production.
 
-- Agones Integration
-- xDS
-- A more complete routing story, including a secure packet routing solution 
+- Agones Integration.
+- xDS compatibility. (?)
+- A more complete routing story, including a secure packet routing solution.
 
 ## Usage
 
