@@ -16,7 +16,11 @@ It is designed to be used behind game clients as well as in front of dedicated g
 
 Project is currently in *alpha* status, and is being actively developed. Expect things to break.
 
-Not to be used in production systems.
+Not to be used in production systems, yet. We have a few features on roadmap that we want to reach before recommending for production.
+
+- Agones Integration
+- xDS
+- A more complete routing story, including a secure packet routing solution 
 
 ## Usage
 
