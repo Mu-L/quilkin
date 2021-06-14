@@ -14,6 +14,38 @@
  * limitations under the License.
  */
 
+//! Logs all incoming and outgoing packets to standard output.
+//!
+//! This filter is useful in debugging deployments where the packets strictly
+//! contain valid `UTF-8` encoded strings. A generic error message is instead
+//! logged if conversion from bytes to `UTF-8` fails.
+//!
+//! #### Filter name
+//! ```text
+//! quilkin.extensions.filters.debug_filter.v1alpha1.Debug
+//! ```
+//!
+//! ### Configuration Examples
+//! ```rust
+//! # let yaml = "
+//! version: v1alpha1
+//! static:
+//!   filters:
+//!     - name: quilkin.extensions.filters.debug.v1alpha1.Debug
+//!       config:
+//!         id: debug-1
+//!   endpoints:
+//!     - address: 127.0.0.1:7001
+//! # ";
+//! # let config = quilkin::config::Config::from_reader(yaml.as_bytes()).unwrap();
+//! # assert_eq!(config.source.get_static_filters().unwrap().len(), 1);
+//! # quilkin::proxy::Builder::from(std::sync::Arc::new(config)).validate().unwrap();
+//! ```
+//!
+//! ### Metrics
+//!
+//! This filter currently exports no metrics.
+
 use std::convert::TryFrom;
 
 use serde::{Deserialize, Serialize};
@@ -25,10 +57,16 @@ crate::include_proto!("quilkin.extensions.filters.debug.v1alpha1");
 use self::quilkin::extensions::filters::debug::v1alpha1::Debug as ProtoDebug;
 
 /// Debug logs all incoming and outgoing packets
-#[crate::filter("quilkin.extensions.filters.debug.v1alpha1.Debug")]
 #[derive(Debug)]
-pub struct Debug {
+struct Debug {
     log: Logger,
+}
+
+pub const NAME: &str = "quilkin.extensions.filters.debug.v1alpha1.Debug";
+
+/// Creates a new factory for generating debug filters.
+pub fn factory(base: &Logger) -> DynFilterFactory {
+    Box::from(DebugFactory::new(base))
 }
 
 impl Debug {
@@ -41,48 +79,6 @@ impl Debug {
         };
 
         Debug { log }
-    }
-}
-
-/// A Debug filter's configuration.
-#[derive(Serialize, Deserialize, Debug)]
-struct Config {
-    id: Option<String>,
-}
-
-impl TryFrom<ProtoDebug> for Config {
-    type Error = ConvertProtoConfigError;
-
-    fn try_from(p: ProtoDebug) -> Result<Self, Self::Error> {
-        Ok(Config { id: p.id })
-    }
-}
-
-/// Factory for the Debug
-pub struct DebugFactory {
-    log: Logger,
-}
-
-impl DebugFactory {
-    pub fn new(base: &Logger) -> Self {
-        DebugFactory { log: base.clone() }
-    }
-}
-
-impl FilterFactory for DebugFactory {
-    fn name(&self) -> &'static str {
-        Debug::FILTER_NAME
-    }
-
-    fn create_filter(&self, args: CreateFilterArgs) -> Result<Box<dyn Filter>, Error> {
-        let config: Option<Config> = args
-            .config
-            .map(|config| config.deserialize::<Config, ProtoDebug>(self.name()))
-            .transpose()?;
-        Ok(Box::new(Debug::new(
-            &self.log,
-            config.and_then(|cfg| cfg.id),
-        )))
     }
 }
 
@@ -106,7 +102,50 @@ impl Filter for Debug {
 fn packet_to_string(contents: Vec<u8>) -> String {
     match String::from_utf8(contents) {
         Ok(str) => str,
-        Err(_) => String::from("error decoding packet"),
+        Err(_) => String::from("error decoding packet as UTF-8"),
+    }
+}
+
+/// Factory for the Debug
+struct DebugFactory {
+    log: Logger,
+}
+
+impl DebugFactory {
+    pub fn new(base: &Logger) -> Self {
+        DebugFactory { log: base.clone() }
+    }
+}
+
+impl FilterFactory for DebugFactory {
+    fn name(&self) -> &'static str {
+        NAME
+    }
+
+    fn create_filter(&self, args: CreateFilterArgs) -> Result<Box<dyn Filter>, Error> {
+        let config: Option<Config> = args
+            .config
+            .map(|config| config.deserialize::<Config, ProtoDebug>(self.name()))
+            .transpose()?;
+        Ok(Box::new(Debug::new(
+            &self.log,
+            config.and_then(|cfg| cfg.id),
+        )))
+    }
+}
+
+/// A Debug filter's configuration.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Config {
+    /// Identifier that will be optionally included with each log message.
+    pub id: Option<String>,
+}
+
+impl TryFrom<ProtoDebug> for Config {
+    type Error = ConvertProtoConfigError;
+
+    fn try_from(p: ProtoDebug) -> Result<Self, Self::Error> {
+        Ok(Config { id: p.id })
     }
 }
 
