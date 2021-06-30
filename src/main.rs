@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-use quilkin::runner::run;
-
 #[tokio::main]
-async fn main() -> Result<(), quilkin::runner::Error> {
-    run(vec![]).await
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    quilkin::run(vec![]).await
 }

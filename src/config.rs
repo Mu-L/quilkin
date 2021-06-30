@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+//! Quilkin configuration.
+
 use std::io;
 use std::marker::PhantomData;
 use std::net::SocketAddr;
