@@ -340,7 +340,7 @@
             .<span class="ident">insert</span>(<span class="self">self</span>.<span class="ident">is_present_key</span>.<span class="ident">clone</span>(), <span class="ident">Value::Bool</span>(<span class="ident">capture</span>.<span class="ident">is_some</span>()));
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">capture</span> {
-            <span class="macro">tracing::trace!</span>(<span class="ident">key</span><span class="op">=</span><span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">metadata_key</span>, <span class="ident">value</span><span class="op">=</span><span class="question-mark">?</span><span class="ident">value</span>, <span class="string">&quot;captured value&quot;</span>);
+            <span class="macro">tracing::trace!</span>(<span class="ident">key</span><span class="op">=</span><span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">metadata_key</span>, <span class="op">%</span><span class="ident">value</span>, <span class="string">&quot;captured value&quot;</span>);
             <span class="ident">ctx</span>.<span class="ident">metadata</span>.<span class="ident">insert</span>(<span class="self">self</span>.<span class="ident">metadata_key</span>.<span class="ident">clone</span>(), <span class="ident">value</span>);
             <span class="prelude-val">Some</span>(<span class="ident">ctx</span>.<span class="ident">into</span>())
         } <span class="kw">else</span> {
