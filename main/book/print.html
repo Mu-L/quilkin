@@ -234,7 +234,7 @@ available.</li>
 <p>In this step, we're going to set up a Xonotic dedicated game server, with Quilkin running as a 
 <a href="integrations.html#server-proxy-as-a-sidecar">sidecar</a>, which will give us access to all the
 <a href="./proxy.html#metrics">metrics</a> that Quilkin provides.</p>
-<pre><code class="language-shell">kubectl apply -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic/sidecar.yaml
+<pre><code class="language-shell">kubectl apply -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic-sidecar/sidecar.yaml
 </code></pre>
 <p>This applies two resources to your cluster:</p>
 <ol>
@@ -266,7 +266,7 @@ command. This will forward the <a href="./admin.html">admin</a> interface to loc
 <a href="https://prometheus.io/">Prometheus</a> metrics that Quilkin exports.</p>
 <h2 id="5-cleanup"><a class="header" href="#5-cleanup">5. Cleanup</a></h2>
 <p>Run the following to delete the Fleet and the accompanying ConfigMap:</p>
-<pre><code class="language-shell">kubectl delete -f  https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic/sidecar.yaml
+<pre><code class="language-shell">kubectl delete -f  https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic-sidecar/sidecar.yaml
 </code></pre>
 <h2 id="6-agones-fleet-but-with-compression"><a class="header" href="#6-agones-fleet-but-with-compression">6. Agones Fleet, but with Compression</a></h2>
 <p>Let's take this one step further and compress the data between the Xonotic client and the server, without having to 
@@ -274,7 +274,7 @@ change either of them!</p>
 <p>Let's create a new Xonotic Fleet on our Agones cluster, but this time configured such that Quilkin will decompress 
 packets that are incoming.</p>
 <p>Run the following:</p>
-<pre><code class="language-shell">kubectl apply -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic/sidecar-compress.yaml
+<pre><code class="language-shell">kubectl apply -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic-sidecar/sidecar-compress.yaml
 </code></pre>
 <p>This will implement the <a href="./filters/compress.html">Compress</a> filter in our Quilkin sidecar proxy in our new 
 Fleet.</p>
@@ -288,7 +288,7 @@ xonotic-sidecar-compress-htc2x-sdp4k   Ready   34.94.107.201   7592   gke-agones
 <p>What we will do in this step, is run Quilkin locally as a client-side proxy to compress the UDP data before it is 
 sent up to our Xonotic servers that are expecting compressed data.</p>
 <p>First, grab a copy of the Quilkin configuration 
-<a href="https://github.com/googleforgames/quilkin/blob/main/examples/agones-xonotic/sidecar-compress.yaml">client-compress.yaml</a> 
+<a data-proofer-ignore href="https://github.com/googleforgames/quilkin/blob/main/examples/agones-xonotic-sidecar/sidecar-compress.yaml">client-compress.yaml</a>
 locally. This has the Compress filter already configured, but we need to fill in the address to connect to.</p>
 <blockquote>
 <p>Rather than editing a file, this could also be sent through the <a href="./xds.html">xDS API</a>, but it is easier to 
@@ -306,7 +306,7 @@ client!</p>
 edit either!</p>
 <h2 id="7-cleanup"><a class="header" href="#7-cleanup">7. Cleanup</a></h2>
 <p>Run the following to delete the Fleet and the accompanying ConfigMap:</p>
-<pre><code class="language-shell">kubectl delete -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic/sidecar-compress.yaml
+<pre><code class="language-shell">kubectl delete -f https://raw.githubusercontent.com/googleforgames/quilkin/main/examples/agones-xonotic-sidecar/sidecar-compress.yaml
 </code></pre>
 <h2 id="whats-next"><a class="header" href="#whats-next">What's Next?</a></h2>
 <ul>
@@ -352,6 +352,7 @@ from the dropdown, as the API surface for Quilkin is still under development.</p
 <p>Examples include:</p>
 <ul>
 <li>Quilkin running as a sidecar while hosted on <a href="https://agones.dev/">Agones</a>.</li>
+<li>Quilkin running as an <a href="./xds.html">xDS</a> <a href="https://agones.dev/">Agones</a> provider for Quilkin proxies. </li>
 <li><a href="https://iperf.fr/">iperf3</a> throughput.</li>
 <li><a href="https://grafana.com/">Grafana</a> dashboards.</li>
 </ul>
@@ -436,6 +437,19 @@ Such well known values are placed within an object in the endpoint metadata, und
 <p>An endpoint's metadata can be specified alongside the endpoint in <a href="./proxy-configuration.html">static configuration</a> or using the <a href="https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/endpoint/v3/endpoint_components.proto#envoy-v3-api-field-config-endpoint-v3-lbendpoint-metadata">xDS endpoint metadata</a> field when using <a href="./xds.html">dynamic configuration</a> via xDS.</p>
 <h5 id="session-1"><a class="header" href="#session-1">Session</a></h5>
 <p>A session represents ongoing communication flow between a client and an <a href="proxy.html#upstream-endpoint">Upstream Endpoint</a>. See the <a href="./session.html">Session documentation</a> for more information.</p>
+<h6 id="asn-maxmind-information"><a class="header" href="#asn-maxmind-information">ASN Maxmind Information</a></h6>
+<p>If quilkin is provided a Maxmind database through the <code>mmdb</code> configuration
+option. Quilkin will log the following information in the <code>maxmind information</code>
+log.</p>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>number</code></td><td>ASN Number</td></tr>
+<tr><td><code>organization</code></td><td>The organisation responsible for the ASN</td></tr>
+<tr><td><code>country_code</code></td><td>The corresponding country code</td></tr>
+<tr><td><code>prefix</code></td><td>The IP prefix CIDR address</td></tr>
+<tr><td><code>prefix_entity</code></td><td>The name of the entity for the prefix address</td></tr>
+<tr><td><code>prefix_name</code></td><td>The name of the prefix address</td></tr>
+</tbody></table>
+</div>
 <h4 id="metrics-1"><a class="header" href="#metrics-1">Metrics</a></h4>
 <p>The proxy exposes the following general metrics (See the metrics sub-sections for metrics specific to other Quilkin components, e.g for metrics related to packet flow see <a href="./session.html#metrics">sessions metrics</a>, or metrics exported by individual filters can be found in the documentation for each filter):</p>
 <ul>
@@ -1131,10 +1145,15 @@ properties:
 definitions:
   Action:
     description: &quot;Whether or not a matching [Rule] should Allow or Deny access&quot;
-    type: string
-    enum:
-      - ALLOW
-      - DENY
+    oneOf:
+      - description: Matching rules will allow packets through.
+        type: string
+        enum:
+          - ALLOW
+      - description: Matching rules will block packets.
+        type: string
+        enum:
+          - DENY
   PortRange:
     description: &quot;Range of matching ports that are configured against a [Rule].&quot;
     allOf:
@@ -1228,11 +1247,19 @@ properties:
 definitions:
   Policy:
     description: &quot;Policy represents how a [`load_balancer`][super] distributes packets across endpoints.&quot;
-    type: string
-    enum:
-      - ROUND_ROBIN
-      - RANDOM
-      - HASH
+    oneOf:
+      - description: Send packets to endpoints in turns.
+        type: string
+        enum:
+          - ROUND_ROBIN
+      - description: Send packets to endpoints chosen at random.
+        type: string
+        enum:
+          - RANDOM
+      - description: Send packets to endpoints based on hash of source IP and port.
+        type: string
+        enum:
+          - HASH
 </code></pre>
 <h3 id="metrics-8"><a class="header" href="#metrics-8">Metrics</a></h3>
 <p>This filter currently does not expose any metrics.</p>
