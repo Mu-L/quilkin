@@ -177,34 +177,7 @@ attention to the order it is placed in your <a href="../../filters.html">Filter 
 the first or last Filter configured to ensure it is compressing the entire set of data being sent.</p>
 </blockquote>
 <h2 id="configuration-options-rust-doc"><a class="header" href="#configuration-options-rust-doc">Configuration Options (<a href="../../../api/quilkin/filters/compress/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
-title: Config
-type: object
-required:
-- on_read
-- on_write
-properties:
-  mode:
-    default: SNAPPY
-    allOf:
-    - $ref: '#/definitions/Mode'
-  on_read:
-    $ref: '#/definitions/Action'
-  on_write:
-    $ref: '#/definitions/Action'
-definitions:
-  Action:
-    description: Whether to do nothing, compress or decompress the packet.
-    type: string
-    enum:
-    - DO_NOTHING
-    - COMPRESS
-    - DECOMPRESS
-  Mode:
-    description: The library to use when compressing.
-    type: string
-    enum:
-    - SNAPPY
+<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.compress.v1alpha1.yaml}}
 </code></pre>
 <h2 id="compression-modes"><a class="header" href="#compression-modes">Compression Modes</a></h2>
 <h3 id="snappy"><a class="header" href="#snappy">Snappy</a></h3>
