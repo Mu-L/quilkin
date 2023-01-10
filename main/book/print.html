@@ -512,7 +512,7 @@ proxies will route to the Allocated GameServer, and you can play a gamee!</p>
 <p>For each <a href="https://github.com/googleforgames/quilkin/releases">release</a>, there is a container image built and
 hosted on Google Cloud <a href="https://cloud.google.com/artifact-registry">Artifact Registry</a>.</p>
 <p>The latest production release can be found under the tag: </p>
-<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.5.0-dev-0b173aa
+<pre><code>us-docker.pkg.dev/quilkin/release/quilkin:0.5.0-dev-798ebc7
 </code></pre>
 <p>Which can be browsed as <a href="https://us-docker.pkg.dev/quilkin/release/quilkin">us-docker.pkg.dev/quilkin/release/quilkin</a>.</p>
 <p>The <a href="https://docs.docker.com/engine/reference/builder/#entrypoint">entrypoint</a> of the container is to run <code>/quilkin</code> 
@@ -525,7 +525,23 @@ UDP proxy.  To see a basic usage of the command-line interface run through the
 <a href="./quickstarts/netcat.html">netcat with Quilkin quickstart</a>. </p>
 <p>For more advanced usage, checkout the <a href="../api/quilkin/struct.Cli.html"><code>quilkin::Cli</code></a> documentation or run:</p>
 <pre><code class="language-shell">$ quilkin --help
-{{#include ../../target/quilkin.commands}}
+The Command-Line Interface for Quilkin
+
+Usage: quilkin [OPTIONS] &lt;COMMAND&gt;
+
+Commands:
+  proxy                   Run Quilkin as a UDP reverse proxy
+  generate-config-schema  Generates JSON schema files for known filters
+  manage                  Runs Quilkin as a xDS management server, using `provider` as a configuration source
+  help                    Print this message or the help of the given subcommand(s)
+
+Options:
+      --no-admin                       Whether to spawn the admin server or not [env: NO_ADMIN=]
+  -c, --config &lt;CONFIG&gt;                The path to the configuration file for the Quilkin instance [env: QUILKIN_CONFIG=] [default: quilkin.yaml]
+      --admin-address &lt;ADMIN_ADDRESS&gt;  The port to bind for the admin server [env: QUILKIN_ADMIN_ADDRESS=]
+  -q, --quiet                          Whether Quilkin will report any results to stdout/stderr [env: QUIET=]
+  -h, --help                           Print help information
+  -V, --version                        Print version information
 </code></pre>
 <h2 id="file-based-configuration"><a class="header" href="#file-based-configuration">File Based Configuration</a></h2>
 <p>For use cases that utilise functionality such as:</p>
@@ -837,7 +853,21 @@ balanced via the Client Proxy to multiple Server Proxies for even greater redund
 <a href="../api/quilkin/cli/struct.Proxy.html"><code>proxy</code> subcommand</a>.</p>
 <p>To view all the options for the <code>proxy</code> subcommand, run: </p>
 <pre><code class="language-shell">$ quilkin proxy --help
-{{#include ../../target/quilkin.proxy.commands}}
+Run Quilkin as a UDP reverse proxy
+
+Usage: quilkin proxy [OPTIONS]
+
+Options:
+  -m, --management-server &lt;MANAGEMENT_SERVER&gt;
+          One or more `quilkin manage` endpoints to listen to for config changes [env: QUILKIN_MANAGEMENT_SERVER=]
+      --mmdb &lt;MMDB&gt;
+          The remote URL or local file path to retrieve the Maxmind database [env: MMDB=]
+  -p, --port &lt;PORT&gt;
+          The port to listen on [env: QUILKIN_PORT=]
+  -t, --to &lt;TO&gt;
+          One or more socket addresses to forward packets to [env: QUILKIN_DEST=]
+  -h, --help
+          Print help information
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="proxy-concepts"><a class="header" href="#proxy-concepts">Proxy Concepts</a></h1>
 <p>The Concepts section helps you learn about the parts of Quilkin when running as proxy and how they work toghether.</p>
@@ -1047,7 +1077,79 @@ clusters:
 </span><span class="boring">quilkin::Proxy::try_from(config).unwrap();
 </span><span class="boring">}</span></code></pre></pre>
 <h2 id="configuration-options-rust-doc"><a class="header" href="#configuration-options-rust-doc">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/capture/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.capture.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+type: object
+required:
+- metadata_key
+- strategy
+properties:
+  metadata_key:
+    description: The key to use when storing the captured value in the filter context. If a match was found it is available under `{{metadata_key}}/is_present`.
+    allOf:
+    - $ref: '#/definitions/Key'
+  strategy:
+    description: The capture strategy.
+    allOf:
+    - $ref: '#/definitions/Strategy'
+definitions:
+  Key:
+    description: A key in the metadata table.
+    type: string
+  Strategy:
+    description: Strategy to apply for acquiring a set of bytes in the UDP packet
+    oneOf:
+    - description: Looks for the set of bytes at the beginning of the packet
+      type: object
+      required:
+      - kind
+      - size
+      properties:
+        kind:
+          type: string
+          enum:
+          - PREFIX
+        remove:
+          description: Whether captured bytes are removed from the original packet.
+          default: false
+          type: boolean
+        size:
+          description: The number of bytes to capture.
+          type: integer
+          format: uint32
+          minimum: 0.0
+    - description: Look for the set of bytes at the end of the packet
+      type: object
+      required:
+      - kind
+      - size
+      properties:
+        kind:
+          type: string
+          enum:
+          - SUFFIX
+        remove:
+          description: The number of bytes to capture.
+          default: false
+          type: boolean
+        size:
+          description: Whether captured bytes are removed from the original packet.
+          type: integer
+          format: uint32
+          minimum: 0.0
+    - description: Look for the set of bytes at the end of the packet
+      type: object
+      required:
+      - kind
+      - pattern
+      properties:
+        kind:
+          type: string
+          enum:
+          - REGEX
+        pattern:
+          description: The regular expression to use for capture.
+          type: string
 </code></pre>
 <h2 id="metrics"><a class="header" href="#metrics">Metrics</a></h2>
 <ul>
@@ -1091,7 +1193,34 @@ attention to the order it is placed in your <a href="proxy/filters/../../filters
 the first or last Filter configured to ensure it is compressing the entire set of data being sent.</p>
 </blockquote>
 <h2 id="configuration-options-rust-doc-1"><a class="header" href="#configuration-options-rust-doc-1">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/compress/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.compress.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+type: object
+required:
+- on_read
+- on_write
+properties:
+  mode:
+    default: SNAPPY
+    allOf:
+    - $ref: '#/definitions/Mode'
+  on_read:
+    $ref: '#/definitions/Action'
+  on_write:
+    $ref: '#/definitions/Action'
+definitions:
+  Action:
+    description: Whether to do nothing, compress or decompress the packet.
+    type: string
+    enum:
+    - DO_NOTHING
+    - COMPRESS
+    - DECOMPRESS
+  Mode:
+    description: The library to use when compressing.
+    type: string
+    enum:
+    - SNAPPY
 </code></pre>
 <h2 id="compression-modes"><a class="header" href="#compression-modes">Compression Modes</a></h2>
 <h3 id="snappy"><a class="header" href="#snappy">Snappy</a></h3>
@@ -1152,7 +1281,36 @@ clusters:
 </span><span class="boring">quilkin::Proxy::try_from(config).unwrap();
 </span><span class="boring">}</span></code></pre></pre>
 <h2 id="configuration-options-rust-doc-2"><a class="header" href="#configuration-options-rust-doc-2">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/concatenate_bytes/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.concatenate_bytes.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+description: Config represents a `ConcatenateBytes` filter configuration.
+type: object
+required:
+- bytes
+properties:
+  bytes:
+    type: array
+    items:
+      type: integer
+      format: uint8
+      minimum: 0.0
+  on_read:
+    description: Whether or not to `append` or `prepend` or `do nothing` on Filter `Read`
+    default: DO_NOTHING
+    allOf:
+    - $ref: '#/definitions/Strategy'
+  on_write:
+    description: Whether or not to `append` or `prepend` or `do nothing` on Filter `Write`
+    default: DO_NOTHING
+    allOf:
+    - $ref: '#/definitions/Strategy'
+definitions:
+  Strategy:
+    type: string
+    enum:
+    - APPEND
+    - PREPEND
+    - DO_NOTHING
 </code></pre>
 <h2 id="metrics-2"><a class="header" href="#metrics-2">Metrics</a></h2>
 <p>This filter currently exports no metrics.</p>
@@ -1182,7 +1340,16 @@ clusters:
 </span><span class="boring">quilkin::Proxy::try_from(config).unwrap();
 </span><span class="boring">}</span></code></pre></pre>
 <h2 id="configuration-options-rust-doc-3"><a class="header" href="#configuration-options-rust-doc-3">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/debug/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.debug.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+description: A Debug filter's configuration.
+type: object
+properties:
+  id:
+    description: Identifier that will be optionally included with each log message.
+    type:
+    - string
+    - 'null'
 </code></pre>
 <h2 id="metrics-3"><a class="header" href="#metrics-3">Metrics</a></h2>
 <p>This filter currently exports no metrics.</p>
@@ -1264,7 +1431,69 @@ clusters:
 </span><span class="boring">quilkin::Proxy::try_from(config).unwrap();
 </span><span class="boring">}</span></code></pre></pre>
 <h2 id="configuration-options-rust-doc-4"><a class="header" href="#configuration-options-rust-doc-4">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/firewall/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.firewall.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+description: Represents how a Firewall filter is configured for read and write operations.
+type: object
+required:
+- on_read
+- on_write
+properties:
+  on_read:
+    type: array
+    items:
+      $ref: '#/definitions/Rule'
+  on_write:
+    type: array
+    items:
+      $ref: '#/definitions/Rule'
+definitions:
+  Action:
+    description: Whether or not a matching [Rule] should Allow or Deny access
+    oneOf:
+    - description: Matching rules will allow packets through.
+      type: string
+      enum:
+      - ALLOW
+    - description: Matching rules will block packets.
+      type: string
+      enum:
+      - DENY
+  PortRange:
+    description: Range of matching ports that are configured against a [Rule].
+    allOf:
+    - $ref: '#/definitions/Range_of_uint16'
+  Range_of_uint16:
+    type: object
+    required:
+    - end
+    - start
+    properties:
+      end:
+        type: integer
+        format: uint16
+        minimum: 0.0
+      start:
+        type: integer
+        format: uint16
+        minimum: 0.0
+  Rule:
+    description: Combination of CIDR range, port range and action to take.
+    type: object
+    required:
+    - action
+    - ports
+    - source
+    properties:
+      action:
+        $ref: '#/definitions/Action'
+      ports:
+        type: array
+        items:
+          $ref: '#/definitions/PortRange'
+      source:
+        description: ipv4 or ipv6 CIDR address.
+        type: string
 </code></pre>
 <h3 id="rule-evaluation"><a class="header" href="#rule-evaluation">Rule Evaluation</a></h3>
 <p>The Firewall filter supports DENY and ALLOW actions for access control. When multiple DENY and ALLOW actions are used 
@@ -1309,7 +1538,31 @@ clusters:
 <p>The load balancing policy (the strategy to use to select what endpoint to send traffic to) is configurable.
 In the example above, packets will be distributed by selecting endpoints in turn, in round robin fashion.</p>
 <h2 id="configuration-options-rust-doc-5"><a class="header" href="#configuration-options-rust-doc-5">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/load_balancer/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.load_balancer.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+description: The configuration for [`load_balancer`][super].
+type: object
+properties:
+  policy:
+    default: ROUND_ROBIN
+    allOf:
+    - $ref: '#/definitions/Policy'
+definitions:
+  Policy:
+    description: Policy represents how a [`load_balancer`][super] distributes packets across endpoints.
+    oneOf:
+    - description: Send packets to endpoints in turns.
+      type: string
+      enum:
+      - ROUND_ROBIN
+    - description: Send packets to endpoints chosen at random.
+      type: string
+      enum:
+      - RANDOM
+    - description: Send packets to endpoints based on hash of source IP and port.
+      type: string
+      enum:
+      - HASH
 </code></pre>
 <h2 id="metrics-6"><a class="header" href="#metrics-6">Metrics</a></h2>
 <p>This filter currently does not expose any metrics.</p>
@@ -1352,7 +1605,24 @@ For example, a configuration allowing 1000 packets per second could potentially 
 <p>Packets that that exceeds the maximum configured rate are dropped.</p>
 </blockquote>
 <h2 id="configuration-options-rust-doc-6"><a class="header" href="#configuration-options-rust-doc-6">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/local_rate_limit/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.local_rate_limit.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+description: Config represents a [self]'s configuration.
+type: object
+required:
+- max_packets
+- period
+properties:
+  max_packets:
+    description: The maximum number of packets allowed to be forwarded by the rate limiter in a given duration.
+    type: integer
+    format: uint
+    minimum: 0.0
+  period:
+    description: The duration in seconds during which max_packets applies. If none is provided, it defaults to one second.
+    type: integer
+    format: uint32
+    minimum: 0.0
 </code></pre>
 <h2 id="metrics-7"><a class="header" href="#metrics-7">Metrics</a></h2>
 <ul>
@@ -1401,7 +1671,88 @@ filters:
 </span><span class="boring">}</span></code></pre></pre>
 <!--  ANCHOR_END: example -->
 <h2 id="configuration-options-rust-doc-7"><a class="header" href="#configuration-options-rust-doc-7">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/match/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.match.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+description: Configuration for [`Match`][super::Match].
+type: object
+properties:
+  on_read:
+    description: Configuration for [`Filter::read`][crate::filters::Filter::read].
+    anyOf:
+    - $ref: '#/definitions/DirectionalConfig'
+    - type: 'null'
+  on_write:
+    description: Configuration for [`Filter::write`][crate::filters::Filter::write].
+    anyOf:
+    - $ref: '#/definitions/DirectionalConfig'
+    - type: 'null'
+additionalProperties: false
+definitions:
+  Branch:
+    description: A specific match branch. The filter is run when `value` matches the value defined in `metadata_key`.
+    type: object
+    required:
+    - name
+    - value
+    properties:
+      config: true
+      name:
+        type: string
+      value:
+        description: The value to compare against the dynamic metadata.
+        allOf:
+        - $ref: '#/definitions/Value'
+  DirectionalConfig:
+    description: Configuration for a specific direction.
+    type: object
+    required:
+    - branches
+    - metadataKey
+    properties:
+      branches:
+        description: List of filters to compare and potentially run if any match.
+        type: array
+        items:
+          $ref: '#/definitions/Branch'
+      fallthrough:
+        description: The behaviour for when none of the `branches` match.
+        default:
+          name: quilkin.filters.drop.v1alpha1.Drop
+          config: null
+        allOf:
+        - $ref: '#/definitions/Filter'
+      metadataKey:
+        description: The key for the metadata to compare against.
+        allOf:
+        - $ref: '#/definitions/Key'
+  Filter:
+    description: Filter is the configuration for a single filter
+    type: object
+    required:
+    - name
+    properties:
+      config: true
+      name:
+        type: string
+    additionalProperties: false
+  Key:
+    description: A key in the metadata table.
+    type: string
+  Value:
+    anyOf:
+    - type: boolean
+    - type: integer
+      format: uint64
+      minimum: 0.0
+    - type: array
+      items:
+        $ref: '#/definitions/Value'
+    - type: string
+    - type: array
+      items:
+        type: integer
+        format: uint8
+        minimum: 0.0
 </code></pre>
 <p>View the <a href="proxy/filters/../../../api/quilkin/filters/match/struct.Config.html">Match</a> filter documentation for more details.</p>
 <h2 id="metrics-8"><a class="header" href="#metrics-8">Metrics</a></h2>
@@ -1485,7 +1836,21 @@ clusters:
 </span><span class="boring">quilkin::Proxy::try_from(config).unwrap();
 </span><span class="boring">}</span></code></pre></pre>
 <h2 id="configuration-options-rust-doc-8"><a class="header" href="#configuration-options-rust-doc-8">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/timestamp/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.timestamp.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+description: Config represents a [self]'s configuration.
+type: object
+required:
+- metadataKey
+properties:
+  metadataKey:
+    description: The metadata key to read the UTC UNIX Timestamp from.
+    allOf:
+    - $ref: '#/definitions/Key'
+definitions:
+  Key:
+    description: A key in the metadata table.
+    type: string
 </code></pre>
 <h2 id="metrics-10"><a class="header" href="#metrics-10">Metrics</a></h2>
 <ul>
@@ -1531,7 +1896,19 @@ clusters:
 </span><span class="boring">}</span></code></pre></pre>
 <p>View the <a href="proxy/filters/capture.html">CaptureBytes</a> filter documentation for more details.</p>
 <h2 id="configuration-options-rust-doc-9"><a class="header" href="#configuration-options-rust-doc-9">Configuration Options (<a href="proxy/filters/../../../api/quilkin/filters/token_router/struct.Config.html">Rust Doc</a>)</a></h2>
-<pre><code class="language-yaml">{{#include ../../../../target/quilkin.filters.token_router.v1alpha1.yaml}}
+<pre><code class="language-yaml">$schema: http://json-schema.org/draft-07/schema#
+title: Config
+type: object
+properties:
+  metadataKey:
+    description: the key to use when retrieving the token from the Filter's dynamic metadata
+    default: quilkin.dev/capture
+    allOf:
+    - $ref: '#/definitions/Key'
+definitions:
+  Key:
+    description: A key in the metadata table.
+    type: string
 </code></pre>
 <h2 id="metrics-11"><a class="header" href="#metrics-11">Metrics</a></h2>
 <ul>
@@ -2027,7 +2404,18 @@ popular projects and artchitecture patterns.</p>
 <a href="xds/../../api/quilkin/cli/struct.Manage.html"><code>manage</code> subcommand</a>, and specifying which provider to be used.</p>
 <p>To view all the providers and options for the <code>manage</code> subcommand, run:</p>
 <pre><code class="language-shell">$ quilkin manage --help
-{{#include ../../../target/quilkin.manage.commands}}
+Runs Quilkin as a xDS management server, using `provider` as a configuration source
+
+Usage: quilkin manage [OPTIONS] &lt;COMMAND&gt;
+
+Commands:
+  agones  Watches Agones' game server CRDs for `Allocated` game server endpoints, and for a `ConfigMap` that specifies the filter configuration
+  file    Watches for changes to the file located at `path`
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -p, --port &lt;PORT&gt;  [env: QUILKIN_PORT=]
+  -h, --help         Print help information
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="filesystem-xds-provider"><a class="header" href="#filesystem-xds-provider">Filesystem xDS Provider</a></h1>
 <p>The filesystem provider watches a configuration file on disk and sends updates to proxies whenever that file changes.</p>
