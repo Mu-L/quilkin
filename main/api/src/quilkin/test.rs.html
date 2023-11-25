@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/test.rs`."><title>test.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../quilkin/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/test.rs`."><title>test.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../quilkin/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -420,6 +420,35 @@
 <a href="#420" id="420">420</a>
 <a href="#421" id="421">421</a>
 <a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
@@ -440,7 +469,7 @@
 <span class="doccomment">/// Common utilities for testing
 </span><span class="kw">use </span>std::{net::SocketAddr, str::from_utf8, sync::Arc, sync::Once};
 
-<span class="kw">use </span>tokio::sync::{mpsc, oneshot, watch};
+<span class="kw">use </span>tokio::sync::{mpsc, oneshot};
 <span class="kw">use </span>tracing_subscriber::EnvFilter;
 
 <span class="kw">use crate</span>::{
@@ -448,7 +477,9 @@
     filters::{prelude::<span class="kw-2">*</span>, FilterRegistry},
     net::endpoint::metadata::Value,
     net::endpoint::{Endpoint, EndpointAddress},
-    net::DualStackLocalSocket,
+    net::DualStackEpollSocket <span class="kw">as </span>DualStackLocalSocket,
+    pool::BufferPool,
+    ShutdownKind, ShutdownRx, ShutdownTx,
 };
 
 <span class="kw">static </span>LOG_ONCE: Once = Once::new();
@@ -510,7 +541,7 @@
             .or_insert_with(|| Value::String(<span class="string">&quot;receive&quot;</span>.into()));
 
         ctx.contents
-            .append(<span class="kw-2">&amp;mut </span><span class="macro">format!</span>(<span class="string">&quot;:odr:{}&quot;</span>, ctx.source).into_bytes());
+            .extend_from_slice(<span class="macro">format!</span>(<span class="string">&quot;:odr:{}&quot;</span>, ctx.source).as_bytes());
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -522,7 +553,7 @@
             .or_insert_with(|| Value::String(<span class="string">&quot;receive&quot;</span>.to_string()));
 
         ctx.contents
-            .append(<span class="kw-2">&amp;mut </span><span class="macro">format!</span>(<span class="string">&quot;:our:{}:{}&quot;</span>, ctx.source, ctx.dest).into_bytes());
+            .extend_from_slice(<span class="macro">format!</span>(<span class="string">&quot;:our:{}:{}&quot;</span>, ctx.source, ctx.dest).as_bytes());
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -540,8 +571,8 @@
 <span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>TestHelper {
     <span class="doccomment">/// Channel to subscribe to, and trigger the shutdown of created resources.
-    </span>shutdown_ch: <span class="prelude-ty">Option</span>&lt;(watch::Sender&lt;()&gt;, watch::Receiver&lt;()&gt;)&gt;,
-    server_shutdown_tx: Vec&lt;<span class="prelude-ty">Option</span>&lt;watch::Sender&lt;()&gt;&gt;&gt;,
+    </span>shutdown_ch: <span class="prelude-ty">Option</span>&lt;(ShutdownTx, ShutdownRx)&gt;,
+    server_shutdown_tx: Vec&lt;<span class="prelude-ty">Option</span>&lt;ShutdownTx&gt;&gt;,
 }
 
 <span class="doccomment">/// Returned from [creating a socket](TestHelper::open_socket_and_recv_single_packet)
@@ -556,7 +587,7 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>shutdown_tx <span class="kw">in </span><span class="self">self</span>.server_shutdown_tx.iter_mut().flat_map(|tx| tx.take()) {
             shutdown_tx
-                .send(())
+                .send(ShutdownKind::Testing)
                 .map_err(|error| {
                     <span class="macro">tracing::warn!</span>(
                         %error,
@@ -567,7 +598,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>((shutdown_tx, <span class="kw">_</span>)) = <span class="self">self</span>.shutdown_ch.take() {
-            shutdown_tx.send(()).unwrap();
+            shutdown_tx.send(ShutdownKind::Testing).unwrap();
         }
     }
 }
@@ -685,17 +716,13 @@
         addr.into()
     }
 
-    <span class="kw">pub fn </span>run_server_with_config(<span class="kw-2">&amp;mut </span><span class="self">self</span>, config: Arc&lt;Config&gt;) {
-        <span class="self">self</span>.run_server(config, <span class="kw">crate</span>::cli::Proxy::default(), <span class="prelude-val">None</span>)
-    }
-
-    <span class="kw">pub fn </span>run_server(
+    <span class="kw">pub async fn </span>run_server(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         config: Arc&lt;Config&gt;,
-        server: <span class="kw">crate</span>::cli::Proxy,
+        server: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::cli::Proxy&gt;,
         with_admin: <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Option</span>&lt;SocketAddr&gt;&gt;,
-    ) {
-        <span class="kw">let </span>(shutdown_tx, shutdown_rx) = watch::channel::&lt;()&gt;(());
+    ) -&gt; u16 {
+        <span class="kw">let </span>(shutdown_tx, shutdown_rx) = <span class="kw">crate</span>::make_shutdown_channel(<span class="kw">crate</span>::ShutdownKind::Testing);
         <span class="self">self</span>.server_shutdown_tx.push(<span class="prelude-val">Some</span>(shutdown_tx));
         <span class="kw">let </span>mode = <span class="kw">crate</span>::cli::Admin::Proxy(&lt;<span class="kw">_</span>&gt;::default());
 
@@ -703,18 +730,37 @@
             mode.server(config.clone(), address);
         }
 
-        tokio::spawn(<span class="kw">async move </span>{
-            server.run(config, mode, shutdown_rx).<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>server = server.unwrap_or_else(|| {
+            <span class="kw">crate</span>::cli::Proxy {
+                <span class="comment">// Use an ephemeral port unless the test specifies otherwise
+                </span>port: <span class="number">0</span>,
+                ..Default::default()
+            }
         });
+
+        <span class="kw">if </span>server.workers.is_none() {
+            server.workers = <span class="prelude-val">Some</span>(<span class="number">1</span>.try_into().unwrap());
+        }
+
+        <span class="kw">let </span>(prox_tx, prox_rx) = tokio::sync::oneshot::channel();
+
+        tokio::spawn(<span class="kw">async move </span>{
+            server
+                .run(config, mode, <span class="prelude-val">Some</span>(prox_tx), shutdown_rx)
+                .<span class="kw">await
+                </span>.unwrap();
+        });
+
+        prox_rx.<span class="kw">await</span>.unwrap()
     }
 
     <span class="doccomment">/// Returns a receiver subscribed to the helper&#39;s shutdown event.
-    </span><span class="kw">async fn </span>get_shutdown_subscriber(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; watch::Receiver&lt;()&gt; {
+    </span><span class="kw">async fn </span>get_shutdown_subscriber(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ShutdownRx {
         <span class="comment">// If this is the first call, then we set up the channel first.
         </span><span class="kw">match </span><span class="self">self</span>.shutdown_ch {
             <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="kw-2">ref </span>rx)) =&gt; rx.clone(),
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>ch = watch::channel(());
+                <span class="kw">let </span>ch = <span class="kw">crate</span>::make_shutdown_channel(<span class="kw">crate</span>::ShutdownKind::Testing);
                 <span class="kw">let </span>recv = ch.<span class="number">1</span>.clone();
                 <span class="self">self</span>.shutdown_ch = <span class="prelude-val">Some</span>(ch);
                 recv
@@ -723,18 +769,30 @@
     }
 }
 
+<span class="kw">pub static </span>BUFFER_POOL: once_cell::sync::Lazy&lt;Arc&lt;BufferPool&gt;&gt; =
+    once_cell::sync::Lazy::new(|| Arc::new(BufferPool::default()));
+
+<span class="attr">#[inline]
+</span><span class="kw">pub fn </span>alloc_buffer(data: <span class="kw">impl </span>AsRef&lt;[u8]&gt;) -&gt; <span class="kw">crate</span>::pool::PoolBuffer {
+    BUFFER_POOL.clone().alloc_slice(data.as_ref())
+}
+
 <span class="doccomment">/// assert that read makes no changes
 </span><span class="kw">pub async fn </span>assert_filter_read_no_change&lt;F&gt;(filter: <span class="kw-2">&amp;</span>F)
 <span class="kw">where
     </span>F: Filter,
 {
-    <span class="kw">let </span>endpoints = <span class="macro">vec!</span>[<span class="string">&quot;127.0.0.1:80&quot;</span>.parse::&lt;Endpoint&gt;().unwrap()];
+    <span class="kw">let </span>endpoints = std::sync::Arc::new(<span class="kw">crate</span>::net::cluster::ClusterMap::default());
+    endpoints.insert_default(std::collections::BTreeSet::from([<span class="string">&quot;127.0.0.1:80&quot;
+        </span>.parse::&lt;Endpoint&gt;()
+        .unwrap()]));
     <span class="kw">let </span>source = <span class="string">&quot;127.0.0.1:90&quot;</span>.parse().unwrap();
-    <span class="kw">let </span>contents = <span class="string">&quot;hello&quot;</span>.to_string().into_bytes();
-    <span class="kw">let </span><span class="kw-2">mut </span>context = ReadContext::new(endpoints.clone(), source, contents.clone());
+    <span class="kw">let </span>contents = <span class="string">b&quot;hello&quot;</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>context = ReadContext::new(endpoints.clone(), source, alloc_buffer(contents));
 
     filter.read(<span class="kw-2">&amp;mut </span>context).<span class="kw">await</span>.unwrap();
-    <span class="macro">assert_eq!</span>(endpoints, <span class="kw-2">&amp;*</span>context.endpoints);
+    <span class="macro">assert!</span>(context.destinations.is_empty());
+    <span class="macro">assert_eq!</span>(endpoints, context.endpoints);
     <span class="macro">assert_eq!</span>(contents, <span class="kw-2">&amp;*</span>context.contents);
 }
 
@@ -744,11 +802,11 @@
     </span>F: Filter,
 {
     <span class="kw">let </span>endpoint = <span class="string">&quot;127.0.0.1:90&quot;</span>.parse::&lt;Endpoint&gt;().unwrap();
-    <span class="kw">let </span>contents = <span class="string">&quot;hello&quot;</span>.to_string().into_bytes();
+    <span class="kw">let </span>contents = <span class="string">b&quot;hello&quot;</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>context = WriteContext::new(
         endpoint.address,
         <span class="string">&quot;127.0.0.1:70&quot;</span>.parse().unwrap(),
-        contents.clone(),
+        alloc_buffer(contents),
     );
 
     filter.write(<span class="kw-2">&amp;mut </span>context).<span class="kw">await</span>.unwrap();

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/filters/compress.rs`."><title>compress.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../quilkin/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/filters/compress.rs`."><title>compress.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quilkin" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../quilkin/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -360,6 +360,53 @@
 <a href="#360" id="360">360</a>
 <a href="#361" id="361">361</a>
 <a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
 </pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
@@ -382,11 +429,12 @@
 
 <span class="macro">crate::include_proto!</span>(<span class="string">&quot;quilkin.filters.compress.v1alpha1&quot;</span>);
 
-<span class="kw">use </span><span class="kw">crate</span>::filters::prelude::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::{filters::prelude::<span class="kw-2">*</span>, pool::BufferPool};
 
 <span class="kw">use </span><span class="self">self</span>::quilkin::filters::compress::v1alpha1 <span class="kw">as </span>proto;
-<span class="kw">use </span>compressor::Compressor;
+<span class="kw">pub use </span>compressor::Compressor;
 <span class="kw">use </span>metrics::Metrics;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">pub use </span>config::{Action, Config, Mode};
 
@@ -399,7 +447,8 @@
     </span>compression_mode: Mode,
     on_read: Action,
     on_write: Action,
-    compressor: Box&lt;<span class="kw">dyn </span>Compressor + Sync + Send&gt;,
+    pool: Arc&lt;BufferPool&gt;,
+    compressor: Compressor,
 }
 
 <span class="kw">impl </span>Compress {
@@ -410,6 +459,7 @@
             compression_mode: config.mode,
             on_read: config.on_read,
             on_write: config.on_write,
+            pool: Arc::new(BufferPool::new(num_cpus::get(), <span class="number">64 </span>* <span class="number">1024</span>)),
         }
     }
 }
@@ -421,30 +471,34 @@
         <span class="kw">let </span>original_size = ctx.contents.len();
 
         <span class="kw">match </span><span class="self">self</span>.on_read {
-            Action::Compress =&gt; <span class="kw">match </span><span class="self">self</span>.compressor.encode(<span class="kw-2">&amp;mut </span>ctx.contents) {
-                <span class="prelude-val">Ok</span>(()) =&gt; {
-                    <span class="self">self</span>.metrics
-                        .read_decompressed_bytes_total
-                        .inc_by(original_size <span class="kw">as </span>u64);
-                    <span class="self">self</span>.metrics
-                        .read_compressed_bytes_total
-                        .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
-                    <span class="prelude-val">Ok</span>(())
+            Action::Compress =&gt; {
+                <span class="kw">match </span><span class="self">self</span>.compressor.encode(<span class="self">self</span>.pool.clone(), <span class="kw-2">&amp;mut </span>ctx.contents) {
+                    <span class="prelude-val">Ok</span>(()) =&gt; {
+                        <span class="self">self</span>.metrics
+                            .read_decompressed_bytes_total
+                            .inc_by(original_size <span class="kw">as </span>u64);
+                        <span class="self">self</span>.metrics
+                            .read_compressed_bytes_total
+                            .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
+                        <span class="prelude-val">Ok</span>(())
+                    }
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
                 }
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
-            },
-            Action::Decompress =&gt; <span class="kw">match </span><span class="self">self</span>.compressor.decode(<span class="kw-2">&amp;mut </span>ctx.contents) {
-                <span class="prelude-val">Ok</span>(()) =&gt; {
-                    <span class="self">self</span>.metrics
-                        .read_compressed_bytes_total
-                        .inc_by(original_size <span class="kw">as </span>u64);
-                    <span class="self">self</span>.metrics
-                        .read_decompressed_bytes_total
-                        .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
-                    <span class="prelude-val">Ok</span>(())
+            }
+            Action::Decompress =&gt; {
+                <span class="kw">match </span><span class="self">self</span>.compressor.decode(<span class="self">self</span>.pool.clone(), <span class="kw-2">&amp;mut </span>ctx.contents) {
+                    <span class="prelude-val">Ok</span>(()) =&gt; {
+                        <span class="self">self</span>.metrics
+                            .read_compressed_bytes_total
+                            .inc_by(original_size <span class="kw">as </span>u64);
+                        <span class="self">self</span>.metrics
+                            .read_decompressed_bytes_total
+                            .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
+                        <span class="prelude-val">Ok</span>(())
+                    }
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
                 }
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
-            },
+            }
             Action::DoNothing =&gt; <span class="prelude-val">Ok</span>(()),
         }
     }
@@ -453,31 +507,35 @@
     </span><span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>WriteContext) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
         <span class="kw">let </span>original_size = ctx.contents.len();
         <span class="kw">match </span><span class="self">self</span>.on_write {
-            Action::Compress =&gt; <span class="kw">match </span><span class="self">self</span>.compressor.encode(<span class="kw-2">&amp;mut </span>ctx.contents) {
-                <span class="prelude-val">Ok</span>(()) =&gt; {
-                    <span class="self">self</span>.metrics
-                        .write_decompressed_bytes_total
-                        .inc_by(original_size <span class="kw">as </span>u64);
-                    <span class="self">self</span>.metrics
-                        .write_compressed_bytes_total
-                        .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
-                    <span class="prelude-val">Ok</span>(())
+            Action::Compress =&gt; {
+                <span class="kw">match </span><span class="self">self</span>.compressor.encode(<span class="self">self</span>.pool.clone(), <span class="kw-2">&amp;mut </span>ctx.contents) {
+                    <span class="prelude-val">Ok</span>(()) =&gt; {
+                        <span class="self">self</span>.metrics
+                            .write_decompressed_bytes_total
+                            .inc_by(original_size <span class="kw">as </span>u64);
+                        <span class="self">self</span>.metrics
+                            .write_compressed_bytes_total
+                            .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
+                        <span class="prelude-val">Ok</span>(())
+                    }
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
                 }
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
-            },
-            Action::Decompress =&gt; <span class="kw">match </span><span class="self">self</span>.compressor.decode(<span class="kw-2">&amp;mut </span>ctx.contents) {
-                <span class="prelude-val">Ok</span>(()) =&gt; {
-                    <span class="self">self</span>.metrics
-                        .write_compressed_bytes_total
-                        .inc_by(original_size <span class="kw">as </span>u64);
-                    <span class="self">self</span>.metrics
-                        .write_decompressed_bytes_total
-                        .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
-                    <span class="prelude-val">Ok</span>(())
-                }
+            }
+            Action::Decompress =&gt; {
+                <span class="kw">match </span><span class="self">self</span>.compressor.decode(<span class="self">self</span>.pool.clone(), <span class="kw-2">&amp;mut </span>ctx.contents) {
+                    <span class="prelude-val">Ok</span>(()) =&gt; {
+                        <span class="self">self</span>.metrics
+                            .write_compressed_bytes_total
+                            .inc_by(original_size <span class="kw">as </span>u64);
+                        <span class="self">self</span>.metrics
+                            .write_decompressed_bytes_total
+                            .inc_by(ctx.contents.len() <span class="kw">as </span>u64);
+                        <span class="prelude-val">Ok</span>(())
+                    }
 
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
-            },
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(FilterError::new(err)),
+                }
+            }
             Action::DoNothing =&gt; <span class="prelude-val">Ok</span>(()),
         }
     }
@@ -498,7 +556,11 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use crate</span>::{filters::compress::compressor::Snappy, net::endpoint::Endpoint};
+    <span class="kw">use crate</span>::{
+        filters::compress::compressor::Compressor,
+        net::endpoint::Endpoint,
+        test::{alloc_buffer, BUFFER_POOL},
+    };
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
@@ -514,9 +576,21 @@
     }
 
     <span class="attr">#[tokio::test]
-    </span><span class="kw">async fn </span>config_factory() {
+    </span><span class="kw">async fn </span>config_factory_snappy() {
         <span class="kw">let </span>config = <span class="macro">serde_json::json!</span>({
             <span class="string">&quot;mode&quot;</span>: <span class="string">&quot;SNAPPY&quot;</span>.to_string(),
+            <span class="string">&quot;on_read&quot;</span>: <span class="string">&quot;DECOMPRESS&quot;</span>.to_string(),
+            <span class="string">&quot;on_write&quot;</span>: <span class="string">&quot;COMPRESS&quot;</span>.to_string(),
+
+        });
+        <span class="kw">let </span>filter = Compress::from_config(<span class="prelude-val">Some</span>(serde_json::from_value(config).unwrap()));
+        assert_downstream(<span class="kw-2">&amp;</span>filter).<span class="kw">await</span>;
+    }
+
+    <span class="attr">#[tokio::test]
+    </span><span class="kw">async fn </span>config_factory_lz4() {
+        <span class="kw">let </span>config = <span class="macro">serde_json::json!</span>({
+            <span class="string">&quot;mode&quot;</span>: <span class="string">&quot;LZ4&quot;</span>.to_string(),
             <span class="string">&quot;on_read&quot;</span>: <span class="string">&quot;DECOMPRESS&quot;</span>.to_string(),
             <span class="string">&quot;on_write&quot;</span>: <span class="string">&quot;COMPRESS&quot;</span>.to_string(),
 
@@ -538,10 +612,13 @@
         <span class="kw">let </span>expected = contents_fixture();
 
         <span class="comment">// read compress
-        </span><span class="kw">let </span><span class="kw-2">mut </span>read_context = ReadContext::new(
-            <span class="macro">vec!</span>[Endpoint::new(<span class="string">&quot;127.0.0.1:80&quot;</span>.parse().unwrap())],
+        </span><span class="kw">let </span>endpoints = <span class="kw">crate</span>::net::cluster::ClusterMap::new_default(
+            [Endpoint::new(<span class="string">&quot;127.0.0.1:81&quot;</span>.parse().unwrap())].into(),
+        );
+        <span class="kw">let </span><span class="kw-2">mut </span>read_context = ReadContext::new(
+            endpoints.into(),
             <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
-            expected.clone(),
+            alloc_buffer(<span class="kw-2">&amp;</span>expected),
         );
         compress
             .read(<span class="kw-2">&amp;mut </span>read_context)
@@ -560,7 +637,7 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>write_context = WriteContext::new(
             <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
             <span class="string">&quot;127.0.0.1:8081&quot;</span>.parse().unwrap(),
-            read_context.contents.clone(),
+            read_context.contents,
         );
 
         compress
@@ -586,7 +663,7 @@
             .write(<span class="kw-2">&amp;mut </span>WriteContext::new(
                 <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
                 <span class="string">&quot;127.0.0.1:8081&quot;</span>.parse().unwrap(),
-                <span class="string">b&quot;hello&quot;</span>.to_vec(),
+                alloc_buffer(<span class="string">b&quot;hello&quot;</span>),
             ))
             .<span class="kw">await
             </span>.is_err());
@@ -600,11 +677,14 @@
             Metrics::new(),
         );
 
+        <span class="kw">let </span>endpoints = <span class="kw">crate</span>::net::cluster::ClusterMap::new_default(
+            [Endpoint::new(<span class="string">&quot;127.0.0.1:81&quot;</span>.parse().unwrap())].into(),
+        );
         <span class="macro">assert!</span>(compression
             .read(<span class="kw-2">&amp;mut </span>ReadContext::new(
-                <span class="macro">vec!</span>[Endpoint::new(<span class="string">&quot;127.0.0.1:80&quot;</span>.parse().unwrap())],
+                endpoints.into(),
                 <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
-                <span class="string">b&quot;hello&quot;</span>.to_vec(),
+                alloc_buffer(<span class="string">b&quot;hello&quot;</span>),
             ))
             .<span class="kw">await
             </span>.is_err());
@@ -621,10 +701,13 @@
             Metrics::new(),
         );
 
+        <span class="kw">let </span>endpoints = <span class="kw">crate</span>::net::cluster::ClusterMap::new_default(
+            [Endpoint::new(<span class="string">&quot;127.0.0.1:81&quot;</span>.parse().unwrap())].into(),
+        );
         <span class="kw">let </span><span class="kw-2">mut </span>read_context = ReadContext::new(
-            <span class="macro">vec!</span>[Endpoint::new(<span class="string">&quot;127.0.0.1:80&quot;</span>.parse().unwrap())],
+            endpoints.into(),
             <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
-            <span class="string">b&quot;hello&quot;</span>.to_vec(),
+            alloc_buffer(<span class="string">b&quot;hello&quot;</span>),
         );
         compression.read(<span class="kw-2">&amp;mut </span>read_context).<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(<span class="string">b&quot;hello&quot;</span>, <span class="kw-2">&amp;*</span>read_context.contents);
@@ -632,7 +715,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>write_context = WriteContext::new(
             <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
             <span class="string">&quot;127.0.0.1:8081&quot;</span>.parse().unwrap(),
-            <span class="string">b&quot;hello&quot;</span>.to_vec(),
+            alloc_buffer(<span class="string">b&quot;hello&quot;</span>),
         );
 
         compression.write(<span class="kw-2">&amp;mut </span>write_context).<span class="kw">await</span>.unwrap();
@@ -640,20 +723,19 @@
         <span class="macro">assert_eq!</span>(<span class="string">b&quot;hello&quot;</span>.to_vec(), <span class="kw-2">&amp;*</span>write_context.contents)
     }
 
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>snappy() {
+    <span class="kw">fn </span>roundtrip_compression(compressor: Compressor) {
         <span class="kw">let </span>expected = contents_fixture();
-        <span class="kw">let </span><span class="kw-2">mut </span>contents = expected.clone();
-        <span class="kw">let </span>snappy = Snappy {};
+        <span class="kw">let </span><span class="kw-2">mut </span>contents = alloc_buffer(<span class="kw-2">&amp;</span>expected);
 
-        <span class="kw">let </span>ok = snappy.encode(<span class="kw-2">&amp;mut </span>contents);
-        <span class="macro">assert!</span>(ok.is_ok());
+        compressor
+            .encode(BUFFER_POOL.clone(), <span class="kw-2">&amp;mut </span>contents)
+            .expect(<span class="string">&quot;failed to compress&quot;</span>);
         <span class="macro">assert!</span>(
             !contents.is_empty(),
             <span class="string">&quot;compressed array should be greater than 0&quot;
         </span>);
         <span class="macro">assert_ne!</span>(
-            expected, contents,
+            expected, <span class="kw-2">&amp;*</span>contents,
             <span class="string">&quot;should not be equal, as one should be compressed&quot;
         </span>);
         <span class="macro">assert!</span>(
@@ -663,25 +745,35 @@
             contents.len()
         ); <span class="comment">// 45000 bytes uncompressed, 276 bytes compressed
 
-        </span><span class="kw">let </span>ok = snappy.decode(<span class="kw-2">&amp;mut </span>contents);
-        <span class="macro">assert!</span>(ok.is_ok());
+        </span>compressor
+            .decode(BUFFER_POOL.clone(), <span class="kw-2">&amp;mut </span>contents)
+            .expect(<span class="string">&quot;failed to decompress&quot;</span>);
         <span class="macro">assert_eq!</span>(
-            expected, contents,
+            expected, <span class="kw-2">&amp;*</span>contents,
             <span class="string">&quot;should be equal, as decompressed state should go back to normal&quot;
         </span>);
     }
 
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>snappy() {
+        roundtrip_compression(Mode::Snappy.into());
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>lz4() {
+        roundtrip_compression(Mode::Lz4.into());
+    }
+
     <span class="doccomment">/// At small data packets, compression will add data, so let&#39;s give a bigger data packet!
     </span><span class="kw">fn </span>contents_fixture() -&gt; Vec&lt;u8&gt; {
-        String::from(<span class="string">&quot;hello my name is mark and I like to do things&quot;</span>)
-            .repeat(<span class="number">100</span>)
-            .as_bytes()
-            .to_vec()
+        <span class="string">&quot;hello my name is mark and I like to do things&quot;
+            </span>.repeat(<span class="number">100</span>)
+            .into_bytes()
     }
 
     <span class="doccomment">/// assert compression work with decompress on read and compress on write
     /// Returns the original data packet, and the compressed version
-    </span><span class="kw">async fn </span>assert_downstream&lt;F&gt;(filter: <span class="kw-2">&amp;</span>F) -&gt; (Vec&lt;u8&gt;, Vec&lt;u8&gt;)
+    </span><span class="kw">async fn </span>assert_downstream&lt;F&gt;(filter: <span class="kw-2">&amp;</span>F)
     <span class="kw">where
         </span>F: Filter + <span class="question-mark">?</span>Sized,
     {
@@ -690,7 +782,7 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>write_context = WriteContext::new(
             <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
             <span class="string">&quot;127.0.0.1:8081&quot;</span>.parse().unwrap(),
-            expected.clone(),
+            alloc_buffer(<span class="kw-2">&amp;</span>expected),
         );
 
         filter
@@ -707,10 +799,13 @@
         );
 
         <span class="comment">// read decompress
-        </span><span class="kw">let </span><span class="kw-2">mut </span>read_context = ReadContext::new(
-            <span class="macro">vec!</span>[Endpoint::new(<span class="string">&quot;127.0.0.1:80&quot;</span>.parse().unwrap())],
+        </span><span class="kw">let </span>endpoints = <span class="kw">crate</span>::net::cluster::ClusterMap::new_default(
+            [Endpoint::new(<span class="string">&quot;127.0.0.1:81&quot;</span>.parse().unwrap())].into(),
+        );
+        <span class="kw">let </span><span class="kw-2">mut </span>read_context = ReadContext::new(
+            endpoints.into(),
             <span class="string">&quot;127.0.0.1:8080&quot;</span>.parse().unwrap(),
-            write_context.contents.clone(),
+            write_context.contents,
         );
 
         filter
@@ -719,7 +814,6 @@
             </span>.expect(<span class="string">&quot;should decompress&quot;</span>);
 
         <span class="macro">assert_eq!</span>(expected, <span class="kw-2">&amp;*</span>read_context.contents);
-        (expected, write_context.contents.to_vec())
     }
 }
 </code></pre></div></section></main></body></html>
