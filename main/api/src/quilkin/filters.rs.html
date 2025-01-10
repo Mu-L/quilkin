@@ -222,7 +222,8 @@
 <a href="#221" id="221">221</a>
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a></pre></div><pre class="rust"><code><span class="comment">/*
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a></pre></div><pre class="rust"><code><span class="comment">/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -267,7 +268,7 @@
 </span><span class="kw">pub mod </span>prelude {
     <span class="kw">pub use super</span>::{
         ConvertProtoConfigError, CreateFilterArgs, CreationError, Filter, FilterError,
-        FilterInstance, ReadContext, StaticFilter, WriteContext,
+        FilterInstance, Packet, PacketMut, ReadContext, StaticFilter, WriteContext,
     };
 }
 
@@ -297,6 +298,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::test::TestFilter;
 
 <span class="kw">pub use </span><span class="self">self</span>::chain::FilterChain;
+<span class="kw">pub use </span><span class="kw">crate</span>::components::proxy::packet_router::{Packet, PacketMut};
 
 <span class="attr">#[enum_dispatch::enum_dispatch(Filter)]
 </span><span class="kw">pub enum </span>FilterKind {
@@ -432,7 +434,7 @@
     /// This function should return an `Some` if the packet processing should
     /// proceed. If the packet should be rejected, it will return [`None`]
     /// instead. By default, the context passes through unchanged.
-    </span><span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>ReadContext&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
+    </span><span class="kw">fn </span>read&lt;P: PacketMut&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>ReadContext&lt;<span class="lifetime">'_</span>, P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -442,7 +444,7 @@
     ///
     /// This function should return an `Some` if the packet processing should
     /// proceed. If the packet should be rejected, it will return [`None`]
-    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>WriteContext) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
+    </span><span class="kw">fn </span>write&lt;P: PacketMut&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>WriteContext&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), FilterError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 }
