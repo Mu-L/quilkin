@@ -44,9 +44,8 @@ use crate::config::IcaoCode;
 pub fn spawn<M: Clone + Measurement + Sync + Send + 'static>(
     listener: crate::net::TcpListener,
     config: Arc<crate::Config>,
-    mut shutdown_rx: crate::signal::ShutdownRx,
     phoenix: Phoenix<M>,
-) -> crate::Result<()> {
+) -> crate::Result<crate::cli::Finalizer> {
     use eyre::WrapErr as _;
     use hyper::{Response, StatusCode};
 
@@ -56,8 +55,9 @@ pub fn spawn<M: Clone + Measurement + Sync + Send + 'static>(
         unreachable!("this shouldn't be spawned on an agent")
     };
     let mut config_watcher = datacenters.watch();
+    let (shutdown_tx, mut shutdown_rx) = crate::signal::channel(Default::default());
 
-    std::thread::Builder::new()
+    let ph_thread = std::thread::Builder::new()
         .name("phoenix-http".into())
         .spawn(move || {
             let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -215,7 +215,25 @@ pub fn spawn<M: Clone + Measurement + Sync + Send + 'static>(
         })
         .context("failed to spawn phoenix-http thread")?;
 
-    Ok(())
+    let finalizer = Box::new(move |shutdown: &crate::signal::ShutdownRx| {
+        let kind = *shutdown.borrow();
+        if shutdown_tx.send(kind).is_err() {
+            tracing::error!("phoenix thread is already shutdown");
+            return;
+        }
+
+        if kind != crate::signal::ShutdownKind::Normal {
+            return;
+        }
+
+        let start = std::time::Instant::now();
+        if ph_thread.join().is_err() {
+            tracing::error!("error joining phoenix thread");
+        }
+        tracing::debug!(elapsed = ?start.elapsed(), "phoenix thread shutdown");
+    });
+
+    Ok(finalizer)
 }
 
 use crate::time::DurationNanos;
@@ -373,7 +391,7 @@ impl<M: Measurement + 'static> Phoenix<M> {
                 .iter()
                 .map(|entry| *entry.key())
                 .collect::<Vec<_>>();
-            nodes.shuffle(&mut rand::thread_rng());
+            nodes.shuffle(&mut rand::rng());
             let subset_size = (nodes.len() as f64 * self.subset_percentage).abs() as usize;
 
             nodes[..subset_size].to_vec()
@@ -450,7 +468,14 @@ impl<M: Measurement + 'static> Phoenix<M> {
         let crate::config::DatacenterConfig::NonAgent { datacenters } = &config.datacenter else {
             unreachable!("this shouldn't be called by an agent")
         };
-        for entry in datacenters.write().iter() {
+
+        let dcs = datacenters.write();
+
+        for removed in dcs.removed() {
+            self.nodes.remove(&removed);
+        }
+
+        for entry in dcs.iter() {
             let addr = (*entry.key(), entry.value().qcmp_port).into();
             self.add_node_if_not_exists(addr, entry.value().icao_code);
         }
@@ -599,6 +624,9 @@ impl Node {
 
         coordinates.x = (coordinates.x + (incoming * weight)) / 2.0;
         coordinates.y = (coordinates.y + (outgoing * weight)) / 2.0;
+
+        crate::metrics::phoenix_distance(self.icao_code, self.error_estimate)
+            .set(Coordinates::ORIGIN.distance_to(coordinates))
     }
 }
 
@@ -861,7 +889,7 @@ mod tests {
             .interval_range(Duration::from_millis(10)..Duration::from_millis(15))
             .build();
 
-        super::spawn(qcmp_listener, config.clone(), rx, phoenix).unwrap();
+        let end = super::spawn(qcmp_listener, config.clone(), phoenix).unwrap();
         tokio::time::sleep(Duration::from_millis(150)).await;
 
         let client =
@@ -899,5 +927,7 @@ mod tests {
                 "expected distance {distance} to be > {min} and < {max}",
             );
         }
+
+        end(&rx);
     }
 }

@@ -1,8 +1,12 @@
 use crate::{
-    components::proxy::PipelineError,
+    components::proxy::{sessions::inner_metrics as session_metrics, PipelineError},
     filters::{self, Filter as _},
-    metrics,
-    net::EndpointAddress,
+    metrics::{self, AsnInfo},
+    net::{
+        maxmind_db::{self, IpNetEntry},
+        EndpointAddress,
+    },
+    time::UtcTimestamp,
 };
 pub use quilkin_xdp::xdp;
 use quilkin_xdp::xdp::{
@@ -14,11 +18,13 @@ use quilkin_xdp::xdp::{
     HeapSlab, Umem,
 };
 use std::{
+    collections::hash_map::Entry,
     net::{IpAddr, SocketAddr},
     sync::{
         atomic::{AtomicU16, Ordering},
         Arc,
     },
+    time::Instant,
 };
 
 /// Wrapper around the actual packet buffer and the UDP metadata it parsed to
@@ -105,24 +111,68 @@ pub struct State {
     pub qcmp_port: NetworkU16,
     pub config: Arc<crate::Config>,
     pub destinations: Vec<EndpointAddress>,
+    pub addr_to_asn: std::collections::HashMap<IpAddr, Option<(IpNetEntry, maxmind_db::Asn)>>,
     pub sessions: Arc<SessionState>,
     pub local_ipv4: std::net::Ipv4Addr,
     pub local_ipv6: std::net::Ipv6Addr,
+    pub last_receive: UtcTimestamp,
 }
 
 impl State {
     /// Maps a remote server (upstream) endpoint back to the client endpoint
     /// that initiated the session
     #[inline]
-    fn lookup_client(&self, server_addr: SocketAddr, port: NetworkU16) -> Option<SocketAddr> {
-        self.sessions.lookup_client(server_addr, port)
+    fn lookup_client(
+        &self,
+        server_addr: SocketAddr,
+        port: NetworkU16,
+    ) -> Option<(SocketAddr, AsnInfo<'_>)> {
+        let addr = self.sessions.lookup_client(server_addr, port)?;
+        let entry = self
+            .addr_to_asn
+            .get(&addr.ip())
+            .and_then(|ipe| {
+                ipe.as_ref().map(|(ipe, asn)| AsnInfo {
+                    prefix: &ipe.prefix,
+                    asn: asn.as_str(),
+                })
+            })
+            .unwrap_or(metrics::EMPTY);
+
+        Some((addr, entry))
     }
 
     /// Retrieves or creates a session, ie a mapping of a server endpoint + port
     /// to a client endpoint
     #[inline]
-    fn session(&self, client_addr: SocketAddr, server_addr: SocketAddr) -> NetworkU16 {
-        self.sessions.get_or_create(client_addr, server_addr)
+    fn session(
+        &mut self,
+        client_addr: SocketAddr,
+        server_addr: SocketAddr,
+    ) -> (NetworkU16, AsnInfo<'_>, IpAddresses) {
+        let ips = self.ips(server_addr.ip());
+        let asn = self.addr_to_asn.entry(client_addr.ip()).or_insert_with(|| {
+            let ipe = maxmind_db::MaxmindDb::lookup(client_addr.ip());
+            ipe.map(|ipe| {
+                let asn = maxmind_db::Asn::new(ipe.id);
+                (ipe, asn)
+            })
+        });
+
+        let port =
+            self.sessions
+                .get_or_create(client_addr, server_addr, asn.as_ref().map(|(ipe, _)| ipe));
+
+        (
+            port,
+            asn.as_ref()
+                .map(|(ipe, asn)| AsnInfo {
+                    prefix: &ipe.prefix,
+                    asn: asn.as_str(),
+                })
+                .unwrap_or(metrics::EMPTY),
+            ips,
+        )
     }
 
     #[inline]
@@ -245,10 +295,17 @@ impl PortMap {
     }
 }
 
+struct ClientInfo {
+    asn_info: Option<IpNetEntry>,
+    created_at: Instant,
+    /// The port used to identify this unique session to the IP owning this map
+    port: NetworkU16,
+}
+
 struct PortMapper {
     /// Maps a client endpoint to the port used as the source port for sending
     /// to the server endpoint `Self` is associated with
-    client_to_port: Arc<parking_lot::Mutex<std::collections::HashMap<SocketAddr, NetworkU16>>>,
+    client_to_port: Arc<parking_lot::Mutex<std::collections::HashMap<SocketAddr, ClientInfo>>>,
     port_to_client: Arc<parking_lot::RwLock<PortMap>>,
     port: AtomicU16,
 }
@@ -264,10 +321,14 @@ impl PortMapper {
     }
 
     #[inline]
-    fn get_or_alloc(&self, client_addr: SocketAddr) -> Option<NetworkU16> {
+    fn get_or_alloc(
+        &self,
+        client_addr: SocketAddr,
+        asn: Option<&IpNetEntry>,
+    ) -> Option<NetworkU16> {
         match self.client_to_port.lock().entry(client_addr) {
-            std::collections::hash_map::Entry::Occupied(entry) => Some(*entry.get()),
-            std::collections::hash_map::Entry::Vacant(entry) => {
+            Entry::Occupied(entry) => Some(entry.get().port),
+            Entry::Vacant(entry) => {
                 let port = self.port.fetch_add(1, Ordering::Relaxed);
 
                 if port < EPHEMERAL_RANGE_END {
@@ -275,10 +336,17 @@ impl PortMapper {
                     return None;
                 }
 
+                session_metrics::total_sessions().inc();
+                session_metrics::active_sessions(asn).inc();
+
                 self.port_to_client.write().insert(client_addr, port);
 
                 let port = port.into();
-                entry.insert(port);
+                entry.insert(ClientInfo {
+                    asn_info: asn.cloned(),
+                    created_at: Instant::now(),
+                    port,
+                });
                 Some(port)
             }
         }
@@ -287,6 +355,20 @@ impl PortMapper {
     #[inline]
     fn get_client(&self, port: NetworkU16) -> Option<SocketAddr> {
         self.port_to_client.read().get(port)
+    }
+}
+
+impl Drop for PortMapper {
+    fn drop(&mut self) {
+        let lock = self.client_to_port.lock();
+
+        let now = Instant::now();
+
+        for client_info in lock.values() {
+            session_metrics::active_sessions(client_info.asn_info.as_ref()).dec();
+            session_metrics::duration_secs()
+                .observe(now.duration_since(client_info.created_at).as_secs_f64());
+        }
     }
 }
 
@@ -317,14 +399,19 @@ impl SessionState {
     /// endpoint to the specified server endpoint, pairing the port to the client
     /// for forwarding packets back from the server to the client
     #[inline]
-    fn get_or_create(&self, client_addr: SocketAddr, server_addr: SocketAddr) -> NetworkU16 {
+    fn get_or_create(
+        &self,
+        client_addr: SocketAddr,
+        server_addr: SocketAddr,
+        asn: Option<&IpNetEntry>,
+    ) -> NetworkU16 {
         let port = match self.sessions.entry(server_addr) {
             crate::collections::ttl::Entry::Occupied(entry) => {
-                entry.get().get_or_alloc(client_addr)
+                entry.get().get_or_alloc(client_addr, asn)
             }
             crate::collections::ttl::Entry::Vacant(entry) => {
                 let pm = PortMapper::new();
-                let port = pm.get_or_alloc(client_addr);
+                let port = pm.get_or_alloc(client_addr, asn);
                 entry.insert(pm);
                 port
             }
@@ -341,7 +428,7 @@ impl SessionState {
         // the client endpoint is any longer, or, slightly worse, a packet gets
         // redirected to a different client.
         self.sessions.remove(server_addr);
-        self.get_or_create(client_addr, server_addr)
+        self.get_or_create(client_addr, server_addr, asn)
     }
 }
 
@@ -355,6 +442,11 @@ pub fn process_packets(
     let filters = state.config.filters.load();
     let cm = state.config.clusters.clone_value();
 
+    let now = UtcTimestamp::now();
+    let jitter = (now - state.last_receive).nanos();
+    state.last_receive = now;
+    let mut had_read = false;
+
     while let Some(inner) = rx_slab.pop_front() {
         let Ok(Some(udp)) = UdpPacket::parse_packet(&inner) else {
             unreachable!("we somehow got a non-UDP packet, this should be impossible with the eBPF program we use to route packets");
@@ -367,6 +459,7 @@ pub fn process_packets(
 
         let is_client = udp.dst_port == state.external_port;
         let direction = if is_client {
+            had_read = true;
             metrics::READ
         } else {
             metrics::WRITE
@@ -380,7 +473,7 @@ pub fn process_packets(
             if is_client {
                 process_client_packet(packet, umem, &filters, &cm, state, tx_slab)
             } else {
-                process_server_packet(packet, umem, &filters, state, tx_slab)
+                process_server_packet(packet, umem, &filters, state, tx_slab, jitter)
             }
         };
 
@@ -391,12 +484,16 @@ pub fn process_packets(
             }
             Err((error, packet)) => {
                 let discriminant = error.discriminant();
-                metrics::errors_total(direction, discriminant, &metrics::EMPTY).inc();
+                error.inc_system_errors_total(direction, &metrics::EMPTY);
                 metrics::packets_dropped_total(direction, discriminant, &metrics::EMPTY).inc();
 
                 umem.free_packet(packet);
             }
         }
+    }
+
+    if had_read {
+        metrics::packet_jitter(metrics::READ, &metrics::EMPTY).set(jitter);
     }
 }
 
@@ -404,6 +501,8 @@ pub fn process_packets(
 fn push_packet(
     direction: metrics::Direction,
     packet: Packet,
+    asn: AsnInfo<'_>,
+    data_length: usize,
     res: Result<(), PacketError>,
     tx_slab: &mut HeapSlab,
     umem: &mut Umem,
@@ -413,6 +512,9 @@ fn push_packet(
             if let Some(packet) = tx_slab.push_back(packet) {
                 metrics::packets_dropped_total(direction, "tx slab full", &metrics::EMPTY).inc();
                 umem.free_packet(packet);
+            } else {
+                metrics::packets_total(direction, &asn).inc();
+                metrics::bytes_total(direction, &asn).inc_by(data_length as u64);
             }
         }
         Err(err) => {
@@ -465,14 +567,14 @@ fn process_client_packet(
             let Ok(dest_addr) = daddr.to_socket_addr() else {
                 continue;
             };
-            let src_port = state.session(source_addr, dest_addr);
+            let (src_port, asn, ips) = state.session(source_addr, dest_addr);
 
             let mut headers = UdpPacket {
                 src_mac: packet.udp.dst_mac,
                 src_port,
                 dst_mac: packet.udp.src_mac,
                 dst_port: dest_addr.port().into(),
-                ips: state.ips(dest_addr.ip()),
+                ips,
                 data_offset: packet.udp.data_offset,
                 data_length: packet.udp.data_length,
                 hop: packet.udp.hop - 1,
@@ -488,21 +590,29 @@ fn process_client_packet(
             };
 
             let res = fill_packet(&mut headers, data, data_checksum, &mut new_packet);
-            push_packet(metrics::Direction::Read, new_packet, res, tx_slab, umem);
+            push_packet(
+                metrics::Direction::Read,
+                new_packet,
+                asn,
+                packet.udp.data_length,
+                res,
+                tx_slab,
+                umem,
+            );
         }
     }
 
     let Ok(dest_addr) = dest_addr.to_socket_addr() else {
         return Ok(Some(packet.inner));
     };
-    let src_port = state.session(source_addr, dest_addr);
+    let (src_port, asn, ips) = state.session(source_addr, dest_addr);
 
     let mut headers = UdpPacket {
         src_mac: packet.udp.dst_mac,
         src_port,
         dst_mac: packet.udp.src_mac,
         dst_port: dest_addr.port().into(),
-        ips: state.ips(dest_addr.ip()),
+        ips,
         data_offset: packet.udp.data_offset,
         data_length: packet.udp.data_length,
         hop: packet.udp.hop - 1,
@@ -512,7 +622,15 @@ fn process_client_packet(
     headers.calc_checksum(data.len(), data_checksum);
 
     let res = modify_packet_headers(&packet.udp, &headers, &mut packet.inner);
-    push_packet(metrics::Direction::Read, packet.inner, res, tx_slab, umem);
+    push_packet(
+        metrics::Direction::Read,
+        packet.inner,
+        asn,
+        packet.udp.data_length,
+        res,
+        tx_slab,
+        umem,
+    );
 
     Ok(None)
 }
@@ -524,13 +642,16 @@ fn process_server_packet(
     filters: &crate::filters::FilterChain,
     state: &mut State,
     tx_slab: &mut HeapSlab,
+    jitter: i64,
 ) -> Result<Option<Packet>, (PipelineError, Packet)> {
     let server_addr = SocketAddr::new(packet.udp.ips.source(), packet.udp.src_port.host());
 
-    let Some(client_addr) = state.lookup_client(server_addr, packet.udp.dst_port) else {
+    let Some((client_addr, asn)) = state.lookup_client(server_addr, packet.udp.dst_port) else {
         tracing::debug!(address = %server_addr, "received traffic from a server that has no downstream");
         return Ok(Some(packet.inner));
     };
+
+    metrics::packet_jitter(metrics::Direction::Write, &asn).set(jitter);
 
     let mut ctx = filters::WriteContext::new(server_addr.into(), client_addr.into(), packet);
 
@@ -558,7 +679,15 @@ fn process_server_packet(
         let _ = packet.inner.calc_udp_checksum();
     }
 
-    push_packet(metrics::Direction::Write, packet.inner, res, tx_slab, umem);
+    push_packet(
+        metrics::Direction::Write,
+        packet.inner,
+        asn,
+        packet.udp.data_length,
+        res,
+        tx_slab,
+        umem,
+    );
     Ok(None)
 }
 

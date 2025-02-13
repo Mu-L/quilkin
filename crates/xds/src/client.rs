@@ -145,7 +145,7 @@ impl<C: ServiceClient> Client<C> {
             // max delay + jitter of up to 2 seconds
             let mut delay = backoff.delay(attempt, &error).min(BACKOFF_MAX_DELAY);
             delay += Duration::from_millis(
-                rand::thread_rng().gen_range(0..BACKOFF_MAX_JITTER.as_millis() as _),
+                rand::rng().random_range(0..BACKOFF_MAX_JITTER.as_millis() as _),
             );
 
             match error {
@@ -550,6 +550,10 @@ impl AdsClient {
 
                     resource_subscriptions = handle_first_response(&mut stream, resources).await?;
 
+                    // Assume the new server we've connected to has completely different
+                    // state from the previous one, so get rid of our current state
+                    // and get a full refresh from the new relay
+                    local.reset();
                     ds.refresh(&identifier, resource_subscriptions.to_vec(), &local)
                         .await?;
                 }
