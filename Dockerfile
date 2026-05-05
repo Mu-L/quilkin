@@ -40,7 +40,8 @@ FROM chef AS cook
 ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/x86_64-linux-gnu-gcc
 COPY --from=planner /workspace/recipe.json /workspace/recipe.json
 WORKDIR /workspace
-RUN cargo chef cook --profile lto --target x86_64-unknown-linux-gnu --recipe-path recipe.json
+RUN mkdir -p benches && echo 'fn main() {}' > benches/provider.rs && \
+    cargo chef cook --profile lto --target x86_64-unknown-linux-gnu --recipe-path recipe.json
 
 # --- Build quilkin ---
 FROM chef AS builder
