@@ -17,7 +17,6 @@ target/
 
 # CI / docs / non-build directories
 /agones
-/benches
 /docs
 /examples
 /sdks
