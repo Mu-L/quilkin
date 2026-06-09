@@ -18,9 +18,9 @@ jobs:
           - runner: ubuntu-latest
             platform: linux/amd64
             cache_tag: amd64
-          - runner: ubuntu-24.04-arm
-            platform: linux/arm64
-            cache_tag: arm64
+          # - runner: ubuntu-24.04-arm
+          #  platform: linux/arm64
+          #  cache_tag: arm64
     steps:
       - uses: docker/login-action@v3
         with:
